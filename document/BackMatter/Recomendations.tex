@@ -1,3 +1,5 @@
 \begin{recomendations}
-    Recomendaciones
+    Los modelos pre-entrenados para ser adaptados a un problema en cuestión necesitan pasar por un proceso de re-entrenamiento(\textit{fine tuning}), para esto es necesario tener un conjunto de entrenamiento y uno de validación, el proceso de \textit{fine tuning} de los modelos que se añadieron como algoritmos a AutoGoal se realiza en el método \textit{fit}, utilizando el método \textit{train\_test\_split} de \textit{Sklearn} se divide la entrada que recibe el algoritmo en un conjunto de entrenamiento y otro de validación, sería bueno que para este tipo de algoritmos(algoritmos conformados por modelos pre-entrenados) exista forma de pasar estos dos conjuntos como entrada, ya que muchas veces los conjuntos vienen separados para este tipo de tareas(para el entrenamiento y la validación), de esta forma no se tomaría el propio conjunto de entrenamiento para validar también.
+
+    Además debemos tener en cuenta que los modelos preentrenados poseen muchísimos parámetros por lo que re-entrenarlos requiere de muchos recursos y tiempo, es importante entonces que la cantidad de corridas que haga AutoGoal sobre estos algoritmos para encontrar el mejor ajuste sea lo mínimo posible.
 \end{recomendations}

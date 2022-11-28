@@ -1,1 +1,24 @@
 \chapter{Detalles de Implementación y Experimentos}\label{chapter:implementation}
+Para la experimentación de la integración de los dos algoritmos mencionados en el capítulo anterior solo se tuvo en cuenta que AutoGoal los detectara en dependencia de los tipos semánticos de la entrada y la salida de estos algoritmos, además de que llama al método \textit{fit} donde se realiza el re-entrenamiento de estos con una configuración de los hiperparámetros definidos. 
+
+El algoritmo de clasificación de imágenes(BEiTClassifier) fue efecutado independientemente en Google Colab, con el dataset cifar10 y se obtuvieron los siguientes resultados.
+
+\begin{verbatim}
+***** Running training *****
+  Num examples = 50000
+  Num Epochs = 3
+  Instantaneous batch size per device = 64
+  Total train batch size (w. parallel, distributed & accumulation) = 256
+  Gradient Accumulation steps = 4
+  Total optimization steps = 585
+  Number of trainable parameters = 85769674
+
+Epoch  Training Loss  Validation Loss  Accuracy
+0      0.336400       0.065284         0.980100
+1      0.250400       0.044352         0.985600
+2      0.224500       0.035686         0.989300
+\end{verbatim}
+
+En cuanto al algoritmo para realizar resúmenes de documentos(T5SmallSummarization) no se logró ejecutar completo para un dataset debido a que presenta muchos hiperparámetros y tarda mucho el re-entrenamiento de este.
+
+Se logró integrar los modelos en AutoGoal los cuales se descubren automáticamente y se evaluó que eran compatibles con la arquitectura de autogoal y son descubiertos en dependencia de los tipos semánticos de la entrada y la salida. Debido al alto costo de la experimentación no fue posible hacer experimentos cuantitativos en donde se entrenaran estos algoritmos completos por lo que queda propuesto como trabajo futuro.

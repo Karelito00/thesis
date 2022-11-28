@@ -2,16 +2,16 @@
 
 Como se mencionó en la introducción, AutoGoal es un \textit{framework} de \textit{auto machine learning} escrito en python capaz de resolver problemas en diferentes dominios mediante la construcción de pipelines que representan posibles soluciones a un problema dado. Usuarios no tan expertos pueden usar esta librería interactuando con un API de alto nivel a través de la clase \textbf{AutoML} la cual engloba las diferentes etapas del proceso de AutoML en una interfaz caja negra, además usuarios más expertos pueden interactuar con un API de bajo nivel para realizar sus experimentaciones ya sea cambiando los valores de los parámetros, métricas, tipos de datos, etc.
 
-La propuesta de esta tesis es añadir modelos pre-entrenados en diferentes dominios al framework de AutoGoal, el objetivo es que estos modelos puedan formar parte del espacio de búsqueda de AutoGoal, de forma tal que puedan ser candidatos a soluciones, esto trae como ventajas que no tengamos que entrenar modelos desde cero, muchos modelos preentrenados resuelven populares tareas de clasificación de imágenes, traducción, clasificación de audios, resumen, etc; compitiendo con el estado del arte actual lo que puede traer buenos resultados en un menor tiempo que compitan con soluciones de AutoGoal.
+La propuesta de esta tesis es añadir modelos pre-entrenados en diferentes dominios al framework de AutoGoal, el objetivo es que estos modelos puedan formar parte del espacio de búsqueda de AutoGoal, de forma tal que puedan ser candidatos a soluciones, esto trae como ventajas que no haya que entrenar modelos desde cero, muchos modelos preentrenados resuelven populares tareas de clasificación de imágenes, traducción, clasificación de audios, resumen, etc; compitiendo con el estado del arte actual lo que puede traer buenos resultados en un menor tiempo que compitan con soluciones de AutoGoal.
 
-En este capítulo se hace uso de varias herramientas de \textit{HuggingFace} para darle solución a esta problemática, de esta plataforma mediante la selección de algunos modelos pre-entrenados en diferentes dominios basándose en su popularidad, ya sea mayor cantidad de descargas, estos modelos se integran a AutoGoal haciendo uso de la biblioteca \textit{Transformers}, la cual se utiliza para realizar todo el proceso, desde la descarga del modelo, preparación de datos y reentrenamiento (\textit{fine tuning}).
+En este capítulo se hace uso de varias herramientas de \textit{HuggingFace} para darle solución a esta problemática mediante la selección de algunos modelos pre-entrenados en diferentes dominios basándose en su popularidad, ya sea mayor cantidad de descargas. Estos modelos se integran a AutoGoal haciendo uso de la biblioteca \textit{Transformers}, la cual se utiliza para realizar todo el proceso, desde la descarga del modelo, preparación de datos y reentrenamiento (\textit{fine tuning}).
 
 \section{BEiT para clasificación de imágenes}
-En esta sección se propone la integración del modelo preentrenado BEiT como algoritmo al \textit{framework} AutoGoal. Se usó como fuente la plataforma \textit{HuggingFace} la cual ofrece una api con diferentes \textit{checkpoints} del modelo BEiT, en ese caso se eligió el checkpoint 'microsoft/beit-base-patch16-224-pt22k-ft22k', a continuación se deja una breve descripción de este.
+En esta sección se propone la integración del modelo preentrenado BEiT como algoritmo al \textit{framework} AutoGoal. Se usó como fuente la plataforma \textit{HuggingFace} la cual ofrece una api con diferentes \textit{checkpoints} del modelo BEiT, en ese caso se eligió el checkpoint 'microsoft/beit-base-patch16-224-pt22k-ft22k'.
 
 Descripción de 'microsoft/beit-base-patch16-224-pt22k-ft22k'\footnote[1]{\url{https://huggingface.co/microsoft/beit-base-patch16-224-pt22k-ft22k}}: Modelo BEiT preentrenado de manera autosupervisada en \textit{ImageNet-22k}, también llamado \textit{ImageNet-21k}, conjunto de datos que contiene 14 millones de imágenes y 21841 clases, las imágenes se encuentran a una resolución de 224x224 píxeles, tal modelo fue ajustado(\textit{fine tune}) en el mismo conjunto de datos a una resolución de 224x224 píxeles.
 
-Mediante el método \texttt{ from\_pretrained } de  la clase \texttt{ BeitForImageClassification } se descargan el modelo con sus pesos y además es cacheado, este método recibe como primer parámetro el \textit{path} del \textit{checkpoint} que vamos a descargar, el cual mencionamos arriba. Como vamos a hacerle \textit{fine-tuning} a este \textit{checkpoint} es necesario redefinir el vocabulario, por lo que tenemos que pasar dos diccionarios que representan las etiquetas del conjunto de datos que vamos a utilizar para reentrenar BEiT con sus respectivos ids únicos, es decir cada etiqueta tiene un número único, y mediante estos dos diccionarios se puede saber el id conociendo la etiqueta y viceversa, además debemos pasar el argumento \texttt{ ignore\_mismatched\_sizes=True }, esto asegurará que la capa de salida, se deseche y se reemplace por una nueva capa de salida para la clasificación que será inicializada aleatoriamente e incluye un número personalizado de neuronas.
+Mediante el método \texttt{ from\_pretrained } de  la clase \texttt{ BeitForImageClassification } se descarga el modelo con sus pesos y además es cacheado, este método recibe como primer parámetro el \textit{path} del \textit{checkpoint} que se va a descargar, el cual se menciona arriba. Como se le va a hacer \textit{fine-tuning} a este \textit{checkpoint} es necesario redefinir el vocabulario, por lo que se tiene que pasar dos diccionarios que representan las etiquetas del conjunto de datos que se van a utilizar para reentrenar BEiT con sus respectivos ids únicos, es decir cada etiqueta tiene un número único, y mediante estos dos diccionarios se puede saber el id conociendo la etiqueta y viceversa, además se debe pasar el argumento \texttt{ ignore\_mismatched\_sizes=True }, esto asegurará que la capa de salida, se deseche y se reemplace por una nueva capa de salida para la clasificación que será inicializada aleatoriamente e incluye un número personalizado de neuronas.
 
 \begin{verbatim}
     self._model = BeitForImageClassification.from_pretrained(
@@ -22,7 +22,7 @@ Mediante el método \texttt{ from\_pretrained } de  la clase \texttt{ BeitForIma
     )
 \end{verbatim}
 
-Luego hacemos uso de la clase \texttt{TrainingArguments} con el objetivo de generar una instancia que luego será pasada al \texttt{Trainer}, esta recibe como primer argumento el nombre que tomará nuestro \textit{checkpoint} y luego recibe una serie de parámetros que definen el proceso de reentrenamiento de nuestro modelo, aquí se detallan los parámetros que se usaron para instanciar esta clase:
+Luego se hace uso de la clase \texttt{TrainingArguments} con el objetivo de generar una instancia que luego será pasada al \texttt{Trainer}, esta recibe como primer argumento el nombre que tomará nuestro \textit{checkpoint} y luego recibe una serie de parámetros que definen el proceso de reentrenamiento del modelo, aquí se detallan los parámetros que se usaron para instanciar esta clase:
 
 \begin{verbatim}
     args = TrainingArguments(
@@ -42,19 +42,19 @@ Luego hacemos uso de la clase \texttt{TrainingArguments} con el objetivo de gene
 \end{verbatim}
 
 \begin{itemize}
-    \item \texttt{evaluation\_strategy}: recibe un \textit{string} con los siguientes valores: 'no', 'epoch' o 'steps', el valor por defecto es 'no', es decir que no realiza validaciones durante el entrenamiento, en nuestro caso asignamos 'epoch' a este parámetro para que en cada época del entrenamiento se valide.
-    \item \texttt{save\_strategy}: recibe un \textit{string} con los siguientes valores: 'no', 'epoch' o 'steps', el valor por defecto es 'steps', en nuestro caso le asignamos 'epoch', para que se guarde una copia del modelo cada vez que se alcanza una época en el entrenamiento.
+    \item \texttt{evaluation\_strategy}: recibe un \textit{string} con los siguientes valores: 'no', 'epoch' o 'steps', el valor por defecto es 'no', es decir que no realiza validaciones durante el entrenamiento, se usó 'epoch' para que en cada época del entrenamiento se valide.
+    \item \texttt{save\_strategy}: recibe un \textit{string} con los siguientes valores: 'no', 'epoch' o 'steps', el valor por defecto es 'steps', se usó 'epoch', para que se guarde una copia del modelo cada vez que se alcanza una época en el entrenamiento.
     \item \texttt{learning\_rate} es el radio de aprendizaje para el optimizador \textit{AdamW}.
-    \item \texttt{per\_device\_train\_batch\_size} tamaño del \textit{batch} que se usará en el entrenamiento, se le asignó 8.
-    \item \texttt{per\_device\_eval\_batch\_size} tamaño del \textit{batch} que se usará en la evaluación, se le asignó 8.
+    \item \texttt{per\_device\_train\_batch\_size} tamaño del \textit{batch} que se usará en el entrenamiento, se le asignó 64.
+    \item \texttt{per\_device\_eval\_batch\_size} tamaño del \textit{batch} que se usará en la evaluación, se le asignó 64.
     \item \texttt{gradient\_accumulation\_steps} es una técnica en la que se puede entrenar en tamaños de \textit{batch} más grandes de lo que la máquina normalmente podría guardar en memoria, se le asignó 4.
     \item \texttt{num\_train\_epochs} cantidad de épocas que tendrá el entrenamiento, toma valores enteros, en caso de que sea un valor con coma, entonces la última época la realizará en base al por ciento que representa la parte decimal.
     \item \texttt{warmup\_ratio} proporción del total de pasos de entrenamiento usados para un \textit{linear\_warmup} desde 0 hasta el \textit{learning\_rate}
-    \item \texttt{load\_best\_model\_at\_end} a este parámetro le asignamos el valor \texttt{True} y lo que hace es cargar el mejor checkpoint de todas las épocas de entrenamiento basándose en la métrica. Importante que si este valor es verdadero entonces \texttt{evaluation\_strategy} y \texttt{save\_strategy} deben tener el mismo valor.
-    \item \texttt{metric\_for\_best\_model} este parámetro se usa junto con \texttt{load\_best\_model\_at\_end} para definir la métrica que se usará para comparar los checkpoints en cada época, en nuestro caso asignamos \textit{accuracy}.
+    \item \texttt{load\_best\_model\_at\_end} a este parámetro se le asignó el valor \texttt{True} y lo que hace es cargar el mejor checkpoint de todas las épocas de entrenamiento basándose en la métrica. Importante que si este valor es verdadero entonces \texttt{evaluation\_strategy} y \texttt{save\_strategy} deben tener el mismo valor.
+    \item \texttt{metric\_for\_best\_model} este parámetro se usa junto con \texttt{load\_best\_model\_at\_end} para definir la métrica que se usará para comparar los checkpoints en cada época, se le asignó la métrica \textit{accuracy}.
 \end{itemize}
 
-Luego para hacer el reentrenamiento del modelo creamos una instancia de la clase \texttt{Trainer} que recibe como primer parámetro el modelo en este caso sería la instancia que obtuvimos al llamar \texttt{from\_pretrained()} en la clase \texttt{BeitForImageClassification}, y como segundo parámetro la instancia de la clase \texttt{TrainingArguments} que creamos arriba, entonces llamamos al método \texttt{train} de esta, que se encarga de correr el re-entrenamiento, para instanciarla la clase \texttt{Trainer} le pasamos los siguientes parámetros:
+Luego para hacer el reentrenamiento del modelo se crea una instancia de la clase \texttt{Trainer} que recibe como primer parámetro el modelo en este caso sería la instancia que se obtiene al llamar \texttt{from\_pretrained()} en la clase \texttt{BeitForImageClassification}, y como segundo parámetro la instancia de la clase \texttt{TrainingArguments} que se creó arriba, entonces se llama al método \texttt{train} de esta, que se encarga de correr el re-entrenamiento, para instanciar la clase \texttt{Trainer} se le pasa los siguientes parámetros:
 
 \begin{verbatim}
     Trainer(
@@ -67,9 +67,9 @@ Luego para hacer el reentrenamiento del modelo creamos una instancia de la clase
     )
 \end{verbatim}
 
-\textit{train\_ds} y \textit{eval\_ds} corresponden a los conjuntos de datos para el entrenamiento y la validación durante el proceso de \textit{fine tuning}, hay dos \textit{features} claves para el reentrenamiento, estos son \texttt{pixel\_values} y \texttt{label}, que representan las imágenes como tensores de \texttt{torch} y las etiquetas de las imágenes respectivamente, estos conjuntos de datos tienen que ser \textit{Callable}, es decir tienen que implementar el método \texttt{\_\_getitem\_\_} y cuando este sea llamado debe retornar un diccionario con las llaves \textit{pixel\_values} y \textit{label}, las cuales tendrán como valor el elemento en la posición de las listas \textit{pixel\_values} y \textit{label} en la que fue llamada el método \texttt{\_\_getitem\_\_}, además esta debe implementar el método \texttt{\_\_len\_\_}, para resolver esto se creó una clase llamada \texttt{IterDataset} que implementa lo antes descrito. Importante que las imágenes tengan una resolución acorde a la que dicta el modelo, por ejemplo en este caso es de 224x224 píxeles.
+\textit{train\_ds} y \textit{eval\_ds} corresponden a los conjuntos de datos para el entrenamiento y la validación durante el proceso de \textit{fine tuning}, hay dos \textit{features} claves para el reentrenamiento, estos son \texttt{pixel\_values} y \texttt{label}, que representan las imágenes como tensores de \texttt{torch} y las etiquetas de las imágenes respectivamente, estos conjuntos de datos tienen que ser \textit{Callable}, es decir tienen que implementar el método \texttt{\_\_getitem\_\_} y cuando este sea llamado debe retornar un diccionario con las llaves \textit{pixel\_values} y \textit{label}, las cuales tendrán como valor el elemento en la posición de las listas \textit{pixel\_values} y \textit{label} en la que fue llamada el método \texttt{\_\_getitem\_\_}, además esta debe implementar el método \texttt{\_\_len\_\_}, para resolver esto se creó una clase llamada \texttt{IterDataset} que implementa lo antes descrito. Importante que las imágenes tengan una resolución acorde a la que dicta el modelo, por ejemplo en este caso se requiere que sean de 224x224 píxeles.
 
-\textit{data\_collator} este método se encarga de formar un \textit{batch} de elementos del conjunto de datos durante el proceso de \textit{fine tuning}, ya sea del conjunto de entrenamiento o del conjunto de validación. Este método también es llamado cuando se quieren hacer predicciones y no se mandan las etiquetas.
+\textit{data\_collator} este método se encarga de formar un \textit{batch} de elementos del conjunto de datos durante el proceso de \textit{fine tuning}, ya sea del conjunto de entrenamiento o del conjunto de validación. Este método también es llamado cuando se quieren hacer predicciones.
 
 \textit{compute\_metrics}: recibe como parámetro una instancia de la clase \texttt{EvalPrediction} que contiene dos llaves claves, \texttt{predictions} y \texttt{label\_ids} ambos arreglos de \textit{numpy}, el primero contiene las predicciones que hizo el modelo y el segundo las etiquetas en caso de que fueran pasadas, y se utiliza la métrica de \textit{accuracy} para compararlos.
 
@@ -78,7 +78,7 @@ Para englobar lo mencionado, se creó una clase \texttt{BEiTClassifier} la cual 
 
 El método \texttt{fit} de \texttt{BEiTClassifierWrapper}  recibe las imágenes y las etiquetas que serán usadas para reentrenar a \textit{BEiT}, las imágenes las recibe como una secuencia de tensores de torch(\texttt{Seq[Tensor3]}) y las etiquetas serían un vector de categorías(\texttt{VectorCategorical}). Dentro del método \texttt{fit} se descarga el modelo, se divide el conjunto de datos en entrenamiento y validación utilizando el método de \textit{sklearn} \texttt{train\_test\_split} y se instancian como \texttt{IterDataset}, y luego se procede a instanciar las configuraciones y a correr el entrenamiento.
 
-Esta clase implementa también el método \texttt{predict} que recibe como argumento las imágenes como secuencia de tensores de \textit{torch} con las cuales luego se llama al método \texttt{predict} de nuestro modelo.
+Esta clase implementa también el método \texttt{predict} que recibe como argumento las imágenes como secuencia de tensores de \textit{torch} con las cuales luego se llama al método \texttt{predict} del modelo.
 
 Para el re-entrenamiento de este modelo se utilizó la métrica 'accuracy' con la cual se comparan las predicciones con las etiquetas referencias para saber que tan efectivo está siendo el proceso de \textit{fine tuning}.
 
@@ -90,11 +90,11 @@ Hiperparámetros a optimizar por Autogoal:
 \end{itemize}
 
 \section{T5-small para resumen de documentos}
-En esta sección se propone la integración del modelo preentrenado T5 como algoritmo al \textit{framework} AutoGoal. Se usó como fuente la plataforma \textit{HuggingFace} la cual ofrece una api con acceso a diferentes \textit{checkpoints} del modelo T5, en ese caso se eligió el checkpoint 't5-small', a continuación se deja una breve descripción de este.
+En esta sección se propone la integración del modelo preentrenado T5 como algoritmo al \textit{framework} AutoGoal. Se usó como fuente la plataforma \textit{HuggingFace} la cual ofrece una api con acceso a diferentes \textit{checkpoints} del modelo T5, en ese caso se eligió el checkpoint 't5-small'.
 
 Con T5, se propone reformular todas las tareas de NLP(\textit{natural language preprocessing}) en un formato de texto a texto unificado donde la entrada y la salida son siempre cadenas de texto, en contraste con los modelos de estilo BERT que solo pueden generar una etiqueta de clase o un intervalo de la entrada. El marco de texto a texto nos permite usar el mismo modelo, función de pérdida e hiperparámetros en cualquier tarea de NLP, incluyendo traducción automática, resumen de documentos, respuesta a preguntas y tareas de clasificación (por ejemplo, análisis de sentimientos). Incluso podemos aplicar T5 a tareas de regresión entrenándolo para predecir la representación de cadena de un número en lugar del número en sí.
 
-Mediante el método \texttt{ from\_pretrained } de  la clase \texttt{ AutoModelForSeq2SeqLM } se descargan el modelo con sus pesos y además es cacheado, este método recibe como primer parámetro el \textit{path} del \textit{checkpoint} que vamos a descargar, el cual mencionamos arriba. Como podemos darnos cuenta no recibimos una advertencia como en nuestro ejemplo de clasificación de imágenes. Esto significa que usamos todos los pesos del modelo preentrenado y no hay cabeza inicializada aleatoriamente en este caso.
+Mediante el método \texttt{ from\_pretrained } de la clase \texttt{ AutoModelForSeq2SeqLM } se descarga el modelo con sus pesos y además es cacheado, este método recibe como primer parámetro el \textit{path} del \textit{checkpoint} que se va a descargar, el cual se menciona arriba.
 
 \begin{verbatim}
     self._model = AutoModelForSeq2SeqLM.from_pretrained(
@@ -102,11 +102,11 @@ Mediante el método \texttt{ from\_pretrained } de  la clase \texttt{ AutoModelF
         ).to(self._device)
 \end{verbatim}
 
-Como necesitamos hacer un preprocesamiento a los documentos y a los resúmenes, hacemos uso del método \texttt{from\_pretrained} la clase \texttt{ AutoTokenizer } el cual nos descargará un procesador de texto de acuerdo al modelo que estamos reentrenando.
+Como se necesita hacer un preprocesamiento a los documentos y a los resúmenes, se hace uso del método \texttt{from\_pretrained} de la clase \texttt{ AutoTokenizer } el cual descarga un procesador de texto de acuerdo al modelo que se va a reentrenar.
 
-Una vez descargado el \texttt{tokenizer} pasamos nuestros datos por un método de preprocesamiento, tengamos en cuenta que este preprocesamiento se hace lo mismo a la hora de entrenar que a la hora de predecir, y en el último caso puede ser que no tengamos acceso a los resúmenes. Para tokenizar los documentos es necesario añadir el prefijo \texttt{"summarize: "} ya que el modelo \textit{t5-small} puede también ser usado para traducir y es necesario saber que tarea va a desarrollar. Le pasamos los datos al \textit{tokenizer} con el argumento \texttt{truncation=True} de forma tal que una entrada más larga de lo que puede manejar el modelo será truncada a la máxima longitud.
+Una vez descargado el \texttt{tokenizer} se pasan los datos por un método de preprocesamiento, este preprocesamiento se hace lo mismo a la hora de entrenar que a la hora de predecir, y en el último caso puede ser que no se envíen los resúmenes. Para tokenizar los documentos es necesario añadir el prefijo \texttt{"summarize: "} ya que el modelo \textit{t5-small} puede también ser usado para traducir y es necesita saber que tarea va a desarrollar. Se le pasan los datos al \textit{tokenizer} con el argumento \texttt{truncation=True} de forma tal que una entrada más larga de lo que puede manejar el modelo será truncada a la máxima longitud.
 
-Luego hacemos uso de la clase \texttt{Seq2SeqTrainingArguments}  con el objetivo de generar una instancia que luego será pasada al \texttt{Seq2SeqTrainer}, esta recibe como primer argumento el nombre que tomará nuestro \textit{checkpoint} y luego recibe una serie de parámetros opcionales que definen el proceso de reentrenamiento de nuestro modelo, como nuestra tarea es del tipo secuencia a secuencia, estas clases tienen como prefijo \texttt{Seq2Seq}, aquí se detallan los parámetros que se usaron para instanciar esta clase:
+Luego se hace uso de la clase \texttt{Seq2SeqTrainingArguments}  con el objetivo de generar una instancia que luego será pasada al \texttt{Seq2SeqTrainer}, esta recibe como primer argumento el nombre que tomará el \textit{checkpoint} y luego recibe una serie de parámetros opcionales que definen el proceso de reentrenamiento del modelo, como la tarea es del tipo secuencia a secuencia, estas clases tienen como prefijo \texttt{Seq2Seq}, aquí se detallan los parámetros que se usan para instanciar esta clase:
 
 \begin{verbatim}
     args = Seq2SeqTrainingArguments(
@@ -124,7 +124,7 @@ Luego hacemos uso de la clase \texttt{Seq2SeqTrainingArguments}  con el objetivo
 \end{verbatim}
 
 \begin{itemize}
-    \item \texttt{evaluation\_strategy}: recibe un \textit{string} con los siguientes valores: 'no', 'epoch' o 'steps', el valor por defecto es 'no', es decir que no realiza validaciones durante el entrenamiento, en nuestro caso asignamos 'epoch' a este parámetro para que en cada época del entrenamiento se valide.
+    \item \texttt{evaluation\_strategy}: recibe un \textit{string} con los siguientes valores: 'no', 'epoch' o 'steps', el valor por defecto es 'no', es decir que no realiza validaciones durante el entrenamiento, se asignó 'epoch' a este parámetro para que en cada época del entrenamiento se valide.
     \item \texttt{learning\_rate} es el radio de aprendizaje para el optimizador \textit{AdamW}.
     \item \texttt{per\_device\_train\_batch\_size} tamaño del \textit{batch} que se usará en el entrenamiento, se le asignó 64.
     \item \texttt{per\_device\_eval\_batch\_size} tamaño del \textit{batch} que se usará en la evaluación, se le asignó 64.
@@ -132,7 +132,7 @@ Luego hacemos uso de la clase \texttt{Seq2SeqTrainingArguments}  con el objetivo
     \item \texttt{weight\_decay} el decaimiento del peso para aplicar (si no es cero) a todas las capas en el optimizador AdamW.
 \end{itemize}
 
-Luego para hacer el reentrenamiento del modelo creamos una instancia de la clase \texttt{Seq2SeqTrainer} que recibe como primer parámetro el modelo en este caso sería la instancia que obtuvimos al llamar \texttt{from\_pretrained()} en la clase \texttt{Seq2SeqTrainer}, y como segundo parámetro la instancia de la clase \texttt{Seq2SeqTrainingArguments} que creamos arriba y posee la personalización del proceso de entrenamiento, entonces llamamos al método \texttt{train} de esta, que se encarga de correr el re-entrenamiento, para instanciarla la clase \texttt{Seq2SeqTrainer} le pasamos los siguientes parámetros:
+Luego para hacer el reentrenamiento del modelo se crea una instancia de la clase \texttt{Seq2SeqTrainer} que recibe como primer parámetro el modelo en este caso sería la instancia que se obtuvo al llamar \texttt{from\_pretrained()} en la clase \texttt{Seq2SeqTrainer}, y como segundo parámetro la instancia de la clase \texttt{Seq2SeqTrainingArguments} que se creó arriba y posee la personalización del proceso de entrenamiento, entonces se llama al método \texttt{train} de esta, que se encarga de correr el re-entrenamiento, para instanciar la clase \texttt{Seq2SeqTrainer} se le pasan los siguientes parámetros:
 
 \begin{verbatim}
     self._trainer = Seq2SeqTrainer(
@@ -150,14 +150,14 @@ Luego para hacer el reentrenamiento del modelo creamos una instancia de la clase
 
 \textit{data\_collator} este método se encarga de formar un \textit{batch} de elementos del conjunto de datos durante el proceso de \textit{fine tuning}, ya sea del conjunto de entrenamiento o del conjunto de validación. Este método también es llamado cuando se quieren hacer predicciones.
 
-\textit{compute\_metrics}: recibe como parámetro una instancia de la clase \texttt{EvalPrediction} que contiene dos llaves claves, \texttt{predictions} y \texttt{label\_ids} ambos arreglos de \textit{numpy}, el primero contiene las predicciones que hizo el modelo y el segundo las etiquetas en caso de que fueran pasadas, hacemos un poco de preprocesamiento para descodificar y se utiliza la métrica de \textit{rouge} para comparar.
+\textit{compute\_metrics}: recibe como parámetro una instancia de la clase \texttt{EvalPrediction} que contiene dos llaves claves, \texttt{predictions} y \texttt{label\_ids} ambos arreglos de \textit{numpy}, el primero contiene las predicciones que hizo el modelo y el segundo las etiquetas en caso de que fueran pasadas, se hace un poco de preprocesamiento para descodificar y se utiliza la métrica de \textit{rouge} para comparar.
 
 \subsection{T5-small como algoritmo de Autogoal}
 Para englobar lo mencionado, se creó una clase \texttt{T5SmallSummarization} la cual implementa el método \texttt{run}, método común entre todos los algoritmos de AutoGoal, que llama al método \texttt{run} de la clase \texttt{T5SmallSummarizationWrapper} que funciona como encapsulador de la anterior mencionada y además posee los métodos necesarios para llevar a cabo todas las etapas del algoritmo, ya sea descargar el modelo, reentrenarlo(\textit{fine tuning}) y evaluarlo.
 
 El método \texttt{fit} de \texttt{T5SmallSummarizationWrapper} recibe los documentos y los resúmenes que serán usadas para reentrenar a \textit{T5-small}, los documentos los recibe como una secuencia de documentos (\texttt{Seq[Document]}) y los resúmenes serían una secuencia de oraciones(\texttt{Seq[Sentence]}). Dentro del método \texttt{fit} se descarga el modelo y el tokenizador, se divide el conjunto de datos en entrenamiento y validación utilizando el método de \textit{sklearn} \texttt{train\_test\_split} y se instancian como \texttt{IterDataset}, y luego se procede a instanciar las configuraciones y a correr el entrenamiento.
 
-Esta clase implementa también el método \texttt{predict} que recibe como argumento los documentos como una secuencia de documentos (\texttt{Seq[Document]}) con las cuales luego se llama al método \texttt{predict} de nuestro modelo.
+Esta clase implementa también el método \texttt{predict} que recibe como argumento los documentos como una secuencia de documentos (\texttt{Seq[Document]}) con las cuales luego se llama al método \texttt{predict} del modelo.
 
 Para el re-entrenamiento de este modelo se usó la métrica de ROUGE(\textit{Recall-Oriented Understudy for Gisting Evaluation}), es un conjunto de métricas que se utilizan para evaluar modelos que hacen resumen de documentos y traducción automática en el dominio de procesamiento del lenguaje natural.
 

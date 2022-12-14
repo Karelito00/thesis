@@ -1,7 +1,7 @@
 \begin{conclusions}
     Es de vital importancia seguir haciendo aportes al campo de AutoML con el objetivo de democratizar el uso de la inteligencia artificial, estos sistemas permiten encontrar soluciones factibles sin necesariamente ser expertos en el tema además de ahorrarnos tiempo de investigación y diseño.
 
-    En esta tesis se propuso la implementación e integración de dos modelos pre-entrenados como algoritmos a Autogoal, estos modelos fueron extraídos de la plataforma HuggingFace la cual provee una api que permite descargarlos, personalizar la configuración del re-entrenamiento y re-entrenarlos(\textit{fine tuning}). Específicamente estos modelos son \textit{checkpoints} de BEiT y de T5. 
+    En esta tesis se implementó e integró dos modelos pre-entrenados como algoritmos a Autogoal, estos modelos fueron extraídos de la plataforma HuggingFace la cual provee una api que permite descargarlos, personalizar la configuración del re-entrenamiento y re-entrenarlos(\textit{fine tuning}). Específicamente estos modelos son \textit{checkpoints} de BEiT y de T5. 
 
     En la implementación para cada modelo se crearon dos clases, un wrapper que implementa los métodos para el re-entrenamiento y para la evaluación, y la clase principal que hereda de este wrapper y solo implementa el método run, se añadió un algoritmo para la clasificación de imágenes, y otro algoritmo para el resumen de documentos. Ambos algoritmos utilizan modelos pre-entrenados que fueron elegidos en cuanto a su popularidad en HuggingFace. A pesar de lograrse la integración de estos con AutoGoal y que sean detectados en el pipeline no se pudo experimentar mucho debido a la demanda de recursos y tiempo necesarios para re-entrenar estos algoritmos.
 \end{conclusions}

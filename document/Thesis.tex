@@ -50,6 +50,16 @@
     tabsize=4
 }
 
+\newcommand*\wildcard[2][5cm]{%
+  \mbox{%
+    \vbox to 3cm{%
+      \vfill
+      \hbox to #1{\hrulefill}\par
+      \hbox to #1{\strut\hfil#2\hfil}
+    }
+  }
+}
+
 \lstset{style=mystyle}
 
 \title{AutoGOAL basado en modelos preentrenados}
@@ -83,7 +93,6 @@
 \frontmatter
 \maketitle
 
-\include{FrontMatter/Dedication}
 \include{FrontMatter/Thanks}
 \include{FrontMatter/SupervisorOpinion}
 \include{FrontMatter/Abstract}

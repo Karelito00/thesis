@@ -1,24 +1,88 @@
 \chapter{Detalles de Implementación y Experimentos}\label{chapter:implementation}
 Para la experimentación de la integración de los dos algoritmos mencionados en el capítulo anterior solo se tuvo en cuenta que AutoGoal los detectara en dependencia de los tipos semánticos de la entrada y la salida de estos algoritmos, además de que llama al método \textit{fit} donde se realiza el re-entrenamiento de estos con una configuración de los hiperparámetros definidos. 
 
-El algoritmo de clasificación de imágenes(BEiTClassifier) fue efecutado independientemente en Google Colab, con el dataset cifar10 y se obtuvieron los siguientes resultados.
+El algoritmo de clasificación de imágenes(BEiTClassifier) fue ejecutado independientemente en Google Colab, con el conjunto de datos \textit{cifar10}. Este conjunto contiene 60000 imágenes a color de tamaño 32x32 las cuales se clasifican en 10 diferentes clases. Para el re-entrenamiento del modelo BEiT se utilizó el 90\% del conjunto de datos y el restante 10\% para la validación.
 
-\begin{verbatim}
-***** Running training *****
-  Num examples = 50000
-  Num Epochs = 3
-  Instantaneous batch size per device = 64
-  Total train batch size (w. parallel, distributed & accumulation) = 256
-  Gradient Accumulation steps = 4
-  Total optimization steps = 585
-  Number of trainable parameters = 85769674
+Se utilizó el plan Pro de Colab, y en esta ejecución la gpu disponible fue \textit{NVIDIA-SMI 460.32.03} con nombre \textit{A100-SXM4-40GB} con una disponibilidad de \textit{40536MiB}. Además de \textit{90 gigabytes} de RAM.
 
-Epoch  Training Loss  Validation Loss  Accuracy
-0      0.336400       0.065284         0.980100
-1      0.250400       0.044352         0.985600
-2      0.224500       0.035686         0.989300
-\end{verbatim}
+A continuación se muestran los resultados obtenidos en cada \textit{epoch} del re-entrenamiento, así como la configuración de los parámetros. 
 
-En cuanto al algoritmo para realizar resúmenes de documentos(T5SmallSummarization) no se logró ejecutar completo para un dataset debido a que presenta muchos hiperparámetros y tarda mucho el re-entrenamiento de este.
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{||c c||} 
+      \hline
+      Parámetro & Valor \\ [0.5ex] 
+      \hline\hline
+      \texttt{hidden\_act} & 'gelu' \\ 
+      \hline
+      \texttt{layer\_norm\_eps} & 1e-12 \\
+      \hline
+      \texttt{warmup\_ratio} & 0.1 \\
+      \hline
+      \texttt{learning\_rate} & 5e-5 \\
+      \hline
+      tamaño del \textit{batch} por dispositivo & 64 \\
+      \hline
+      Estrategia de evaluación & \textit{epoch} \\
+      \hline
+      \textit{Epochs} & 3 \\
+      \hline
+      Métrica & \textit{accuracy} \\ [1ex] 
+      \hline
+  \end{tabular}
+  \caption{Configuración de los parámetros tanto para el modelo como para el entrenamiento de este.}
+  \label{table:1}
+\end{table}
 
-Se logró integrar los modelos en AutoGoal los cuales se descubren automáticamente y se evaluó que eran compatibles con la arquitectura de autogoal y son descubiertos en dependencia de los tipos semánticos de la entrada y la salida. Debido al alto costo de la experimentación no fue posible hacer experimentos cuantitativos en donde se entrenaran estos algoritmos completos por lo que queda propuesto como trabajo futuro.
+El proceso de \textit{fine tuning} de este modelo duró 25 minutos, con una cantidad de 85769674 parámetros entrenables y 585 pasos de optimización. Se puede ver en los resultados como en cada época del re-entrenamiento mejora el \textit{accuracy} del modelo y disminuye tanto la pérdida de entrenamiento como de validación.
+
+Este proceso de reentrenamiento sobre el conjunto de datos cifar10 se realizó un total de 8 veces con la misma configuración de parámetros y se obtuvo una media de 98.99\% de acierto y una desviación estándar igual a $15*10^{-4}$.
+
+En la tabla \ref{table-beit} podemos ver que nuestro algoritmo alcanza mejores resultados en el conjunto de datos cifar-10 en comparación con diferentes modelos NAS que fueron entrenados también sobre cifar-10.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{||c c c c||} 
+      \hline
+      \textit{Epoch} & Pérdida de entrenamiento & Pérdida de validación & \textit{Accuracy} \\ [0.5ex] 
+      \hline
+      1 & 0.336400 & 0.065284 & 0.980100 \\ 
+      \hline
+      2 & 0.250400 & 0.044352 & 0.985600 \\ 
+      \hline
+      3 & 0.224500 & 0.035686 & 0.989300 \\ [1ex] 
+      \hline
+  \end{tabular}
+  \caption{Resultados obtenidos en cada época del re-entrenamiento en una de las ejecuciones sobre cifar10}
+  \label{table:2}
+\end{table}
+
+\begin{table}[h!]
+  \centering
+  \scalebox{0.7}{
+  \begin{tabular}{||c c c c||} 
+    \hline
+    Referencia & Parámetros & Accuracy & Número de GPUs \\ [0.5ex] 
+    \hline
+    sharpDARTS & 3.6 & 98.07 & 1 2080Ti \\ 
+    \hline
+    AmoebaNet-B (N=6, F=128)+c/o & 34.9 & 97.87 & 450 K40 \\ 
+    \hline
+    SGAS & 3.8 & 97.61 & 1 1080Ti \\ 
+    \hline
+    Block-QNN-Connection more filter & 33.3 & 97.65 & 32 1080Ti \\ 
+    \hline
+    EENA (more channels) & 54.14 & 97.79 & 1 Titan Xp \\
+    \hline
+    NASNet-A (7 @ 2304)+c/o & 87.6 & 97.60 & 500 P100 \\
+    \hline
+    \textbf{BEiTClassifier} & \textbf{85.7} & \textbf{99} & \textbf{NVIDIA A100-SXM4-40GB} \\ [1ex] 
+    \hline
+  \end{tabular}}
+  \caption{Resultados de diferentes algoritmos NAS comparado con el algoritmo para clasificación de imágenes integrado a AutoGoal, todos evaluados en el conjunto de datos cifar-10.}
+  \label{table-beit}
+  \end{table}
+
+El algoritmo para realizar resúmenes de documentos(T5SmallSummarization) contiene muchos hiperparámetros y su re-entrenamiento (\textit{fine tuning}) conlleva mucho tiempo y recursos, por lo que no se logró ejecutar completo para un conjunto de datos con el que se pudiera comparar resultados.
+
+Se logró integrar los modelos en AutoGoal los cuales se descubren automáticamente y se evaluó que eran compatibles con la arquitectura de autogoal y son descubiertos en dependencia de los tipos semánticos de la entrada y la salida. Debido al alto costo de la experimentación no fue posible mostrar más datos experimentales, por lo que queda propuesto para trabajo futuro.
